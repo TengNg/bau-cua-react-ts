@@ -1,0 +1,8 @@
+[
+    { "id": 1, "name": "Huou", "selected": false, "betLevel": 1 },
+    { "id": 2, "name": "Bau", "selected": false, "betLevel": 1 },
+    { "id": 3, "name": "Ga", "selected": false, "betLevel": 1 },
+    { "id": 4, "name": "Ca", "selected": false, "betLevel": 1 },
+    { "id": 5, "name": "Cua", "selected": false, "betLevel": 1 },
+    { "id": 6, "name": "Tom", "selected": false, "betLevel": 1 }
+]
