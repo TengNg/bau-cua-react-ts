@@ -5,7 +5,9 @@ export default function Information() {
     const {
         items,
         userMoney,
-        resultItems
+        resultItems,
+        flag,
+        counter
     } = useAppContext()
 
     const selectedItems = items.filter(item => item.selected === true)
@@ -24,7 +26,9 @@ export default function Information() {
                 })}
             </div>
 
-            <p className="user-money">Total {formatCurrency(userMoney)}</p>
+            <p style={{ margin: '1rem 0', fontWeight: 'bold' }} className="user-money">Total money: {formatCurrency(userMoney)}</p>
+
+            {flag === false && <p style={{ color: 'gray' }}>Waiting: {counter}s. Please check your result</p>}
         </>
     )
 }

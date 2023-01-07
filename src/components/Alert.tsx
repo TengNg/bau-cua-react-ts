@@ -13,7 +13,7 @@ export default function Alert({ msg }: AlertProps) {
     useEffect(() => {
         const id = setTimeout(() => {
             showAlert(false, 'Please select item')
-        }, 500)
+        }, 1000)
         return () => clearTimeout(id)
     })
 

@@ -4,6 +4,7 @@ import Board from "../components/Board"
 import Information from "../components/Information"
 import Item from "../components/Item"
 import data from "../data/data.json"
+import useLocalStorage from "../hooks/useLocalStorage"
 import generateRandomItems from "../utils/generateRadomItems"
 
 type AppContextProp = {
@@ -32,6 +33,7 @@ type AppContext = {
     resultItems: ResultItem[]
     userMoney: number
     flag: boolean
+    counter: number
     handleSelectItem: (id: number) => void
     handleBetLevelChanged: (id: number, value: number) => void
     showAlert: (show: boolean, msg: string) => void
@@ -45,11 +47,34 @@ export function useAppContext() {
 
 const WINNING_MONEY_PER_ITEM = 1000
 const WAITING_TIME = 8
+const LOCAL_STORAGE_KEY = "localStorage.bauCuaApp"
+const STARTING_MONEY = 10_000
+
+const calculateWinningMoney = (resultItems: ResultItem[], selectedItems: Item[]): number => {
+    // create tally
+    const resultTally = resultItems.reduce((obj: any, item) => {
+        obj[item.name] = (obj[item.name] == null) ? 1 : obj[item.name] + 1
+        return obj
+    }, {})
+
+    const winningMoney = selectedItems.reduce((total, currItem) => {
+        const { betLevel } = currItem
+        const m = WINNING_MONEY_PER_ITEM * betLevel
+        if (resultTally[currItem.name] === undefined) {
+            total -= m * 1
+        } else {
+            total += m * resultTally[currItem.name]
+        }
+        return total
+    }, 0)
+
+    return winningMoney
+}
 
 export function AppContextProvider({ children }: AppContextProp) {
     const [items, setItems] = useState<Item[]>(data)
-    const [userMoney, setUserMoney] = useState<number>(10000)
-    const [resultItems, setResultItems] = useState<any[]>([])
+    const [userMoney, setUserMoney] = useLocalStorage<number>(LOCAL_STORAGE_KEY, STARTING_MONEY)
+    const [resultItems, setResultItems] = useState<ResultItem[]>([])
     const [alert, setAlert] = useState<Alert>({ show: false, msg: "Please select item" })
     const [flag, setFlag] = useState<boolean>(true)
     const [counter, setCounter] = useState<number>(WAITING_TIME)
@@ -72,12 +97,11 @@ export function AppContextProvider({ children }: AppContextProp) {
     useEffect(() => {
         let timer: any = null
         if (resultItems.length > 0) {
-            setUserMoney(currMoney => currMoney + calculateWinningMoney())
+            setUserMoney(currMoney => currMoney + calculateWinningMoney(resultItems, selectedItems))
             timer = setTimeout(() => {
                 setItems(data)
                 setResultItems([])
                 setFlag(true)
-                console.log("flag >> true")
                 stopTimer()
             }, 8000)
         }
@@ -86,13 +110,10 @@ export function AppContextProvider({ children }: AppContextProp) {
 
     // Reset button onClick
     function handleReset() {
-        if (flag === false) return
-        setItems(currItems => {
-            return [...currItems].map(item => {
-                const newItem = { ...item, selected: false, betLevel: 1 }
-                return newItem
-            })
-        })
+        stopTimer()
+        showAlert()
+        setFlag(true)
+        setItems(data)
         setResultItems([])
     }
 
@@ -104,7 +125,7 @@ export function AppContextProvider({ children }: AppContextProp) {
         } else {
             startTimer()
             setFlag(false)
-            showAlert(true, 'Please wait...')
+            showAlert(true, 'Waiting...')
             generateResultItems()
         }
     }
@@ -129,30 +150,6 @@ export function AppContextProvider({ children }: AppContextProp) {
         setResultItems(() => generateRandomItems(data))
     }
 
-    function calculateWinningMoney() {
-        const finalResult = resultItems.reduce((resultObj, item) => {
-            resultObj[item.name] = (resultObj[item.name] == null) ? 1 : resultObj[item.name] + 1
-            return resultObj
-        }, {})
-
-        const winningMoney = selectedItems.reduce((total, currItem) => {
-            const { betLevel } = currItem
-            const m = WINNING_MONEY_PER_ITEM * betLevel
-            let res
-            if (finalResult[currItem.name] === undefined) {
-                res = 1
-                total -= m * res
-            }
-            else {
-                res = finalResult[currItem.name]
-                total += m * res
-            }
-            return total
-        }, 0)
-
-        return winningMoney
-    }
-
     return (
         <AppContext.Provider
             value={{
@@ -162,7 +159,8 @@ export function AppContextProvider({ children }: AppContextProp) {
                 userMoney,
                 resultItems,
                 showAlert,
-                flag
+                flag,
+                counter
             }}
         >
             {alert.show && <Alert {...alert} />}
@@ -174,17 +172,13 @@ export function AppContextProvider({ children }: AppContextProp) {
             <div className='btn-div'>
                 <button
                     onClick={() => handleRoll()}
-                    style={{ backgroundColor: (!flag || selectedItems.length === 0) ? 'gray' : 'black' }}
                 >Roll</button>
                 <button
                     onClick={() => handleReset()}
-                    style={{ backgroundColor: (!flag || selectedItems.length === 0) ? 'gray' : 'black' }}
                 >Reset</button>
             </div>
 
             <Information />
-
-            <p>Waiting: {counter}s</p>
 
         </AppContext.Provider>
     )
