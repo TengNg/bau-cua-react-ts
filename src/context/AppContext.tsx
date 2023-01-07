@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react"
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState } from "react"
 import Alert from "../components/Alert"
 import Board from "../components/Board"
 import Information from "../components/Information"
@@ -37,6 +37,7 @@ type AppContext = {
     handleSelectItem: (id: number) => void
     handleBetLevelChanged: (id: number, value: number) => void
     showAlert: (show: boolean, msg: string) => void
+    handleAddMoney: () => void
 }
 
 const AppContext = createContext({} as AppContext)
@@ -120,8 +121,13 @@ export function AppContextProvider({ children }: AppContextProp) {
     // Roll button onClick
     function handleRoll() {
         if (flag === false) return
+        const totalBetLevel: number = selectedItems.reduce((total, item) => total + +item.betLevel, 0)
         if (selectedItems.length === 0) {
             showAlert(true, 'Please select item')
+        } else if (userMoney === 0) {
+            showAlert(true, 'No money, please add more')
+        } else if (totalBetLevel * WINNING_MONEY_PER_ITEM > userMoney) {
+            showAlert(true, 'BetMoney > CurrentMoney')
         } else {
             startTimer()
             setFlag(false)
@@ -144,7 +150,16 @@ export function AppContextProvider({ children }: AppContextProp) {
 
     function showAlert(show: boolean = false, msg: string = '') {
         setAlert({ show, msg })
-    };
+    }
+
+    function handleAddMoney() {
+        if (userMoney >= 100_000) {
+            showAlert(true, "Can't add more money")
+            return
+        }
+        setUserMoney(currMoney => currMoney + 10_000)
+        console.log('added more money')
+    }
 
     function generateResultItems() {
         setResultItems(() => generateRandomItems(data))
@@ -160,7 +175,8 @@ export function AppContextProvider({ children }: AppContextProp) {
                 resultItems,
                 showAlert,
                 flag,
-                counter
+                counter,
+                handleAddMoney
             }}
         >
             {alert.show && <Alert {...alert} />}

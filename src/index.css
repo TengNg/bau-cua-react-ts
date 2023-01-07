@@ -116,7 +116,7 @@ button:focus-visible {
     margin: 1rem;
 }
 
-.board, .selected-items-div {
+.board, .selected-items-div, .alert {
     display: flex;
 }
 
@@ -150,13 +150,14 @@ button:focus-visible {
     top: 1rem;
     left: 1rem;
     position: absolute;
-    width: 10rem;
+    width: fit-content;
     height: 2rem;
+    justify-content: center;
+    align-items: center;
     border: 3px solid white;
     font-weight: bold;
-    display: grid;
-    place-items: center;
     color: gray;
     border-color: gray;
     border-radius: 0.5rem;
+    padding: 1rem;
 }
